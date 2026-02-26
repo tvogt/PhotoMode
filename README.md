@@ -23,25 +23,21 @@ Photo Mode comes with the following features: View Roll, View Distance, Focus Di
 
 Context for these steps can be viewed in our [Photo Mode Overview Video](https://youtu.be/GEPJZwFt2DM).
 
-0.   Download the Photo Mode package from this repo’s [Releases](https://github.com/UnityTechnologies/PhotoMode/releases) page.
+1.  Import the Photo Mode package into your project from the package manager, + => import package from git URL => https://github.com/tvogt/PhotoMode.git#main
     
-1.   Open a Unity project with the requirements listed above. Ensure all required packages are added before importing Photo Mode and that your scene with the Cinemachine Brain and Virtual Camera is open.
+2.   In your Project window, locate the “PhotoMode” prefab within PhotoMode > Prefabs and drag it into your scene.
     
-2.   Import the Photo Mode package into your project by navigating to Assets > Import Package > Custom Package.
+3.  Select your scene’s newly added PhotoMode prefab and use the Inspector to assign your Player object (or other object you want Photo Mode to focus on) to the “Player Object” field within the Photo Mode script component.
     
-3.   In your Project window, locate the “PhotoMode” prefab within PhotoMode > Prefabs and drag it into your scene.
+4.  Within the Project window, select your project’s main Renderer asset (usually listed as “Forward Renderer”). Go to the asset’s settings within the Inspector window and add a Blit Render Feature to the asset by selecting Add Renderer Feature > Blit.
     
-4.   Select your scene’s newly added PhotoMode prefab and use the Inspector to assign your Player object (or other object you want Photo Mode to focus on) to the “Player Object” field within the Photo Mode script component.
+5.  The Render Feature you just created contains a field called “Blit Material.” Set its target to be the material called “BlitMaterial” located within the PhotoMode > Materials folder.
     
-5.   Within the Project window, select your project’s main Renderer asset (usually listed as “Forward Renderer”). Go to the asset’s settings within the Inspector window and add a Blit Render Feature to the asset by selecting Add Renderer Feature > Blit.
+6.  Select the “PhotoMode” prefab in your scene and locate the “Blit” field within its “Photo Mode” script component. Ensure that field is populated with the Blit you just added to the Renderer.
     
-6.   The Render Feature you just created contains a field called “Blit Material.” Set its target to be the material called “BlitMaterial” located within the PhotoMode > Materials folder.
+7.  Open your Project Settings, navigate to the Input System Package settings, and ensure the Update Mode is set to "Process Events in Dynamic Update."
     
-7.   Select the “PhotoMode” prefab in your scene and locate the “Blit” field within its “Photo Mode” script component. Ensure that field is populated with the Blit you just added to the Renderer.
-    
-8.   Open your Project Settings, navigate to the Input System Package settings, and ensure the Update Mode is set to "Process Events in Dynamic Update."
-    
-9.   Enter Play mode to test Photo Mode. By default, Photo Mode can be activated by pressing “P” on a keyboard or “SELECT” on a gamepad.
+8.  Enter Play mode to test Photo Mode. By default, Photo Mode can be activated by pressing “P” on a keyboard or “SELECT” on a gamepad.
     
 
 ## Saving Screenshots
@@ -80,3 +76,5 @@ Here are some links to helpful context regarding the Photo Mode Demo Package:
 ## History/Sources
 
 This package was forked from [https://github.com/UnityTechnologies/PhotoMode](https://github.com/UnityTechnologies/PhotoMode "https://github.com/UnityTechnologies/PhotoMode") and contains many updates/fixes from [https://github.com/timskap/PhotoMode](https://github.com/timskap/PhotoMode "https://github.com/timskap/PhotoMode").
+
+I have updated the package structure so "import from git url" works, and I've started updating the code to get it working on current Unity versions. This is still incomplete and only works partially.
