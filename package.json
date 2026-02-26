@@ -1,12 +1,12 @@
 {
-  "name": "com.yourname.photomode",
-  "version": "3.0.0",
+  "name": "org.lemuria.photomode",
+  "version": "4.0.0",
   "displayName": "Photo Mode",
   "description": "A virtual photography system for creating in-game screenshots and photographic effects.",
   "unity": "2021.3",
   "author": {
-    "name": "Unity Technologies (Forked by YourName)",
-    "url": "https://github.com/YOUR_USERNAME/PhotoMode"
+    "name": "Unity Technologies (Forked by Tom Vogt)",
+    "url": "https://github.com/tvogt/PhotoMode"
   },
   "dependencies": {
     "com.unity.render-pipelines.universal": "12.1.0",
