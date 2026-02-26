@@ -2,7 +2,7 @@
     "name": "org.lemuria.Photomode.Editor",
     "rootNamespace": "",
     "references": [
-        "Tom15825e38782345648994897f61c99bc1.Photomode"
+        "org.lemuria.Photomode"
     ],
     "includePlatforms": [
         "Editor"
