@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
-using PhotoMode;
 using UnityEngine.Rendering.RenderGraphModule;
 
 namespace PhotoMode
@@ -9,68 +8,91 @@ namespace PhotoMode
     public class BlitRenderPass : ScriptableRenderPass
     {
         public Material blitMaterial = null;
-        public RTHandle source;
+        private RTHandle m_TemporaryColorTexture;
+        private string m_ProfilerTag;
 
-        RTHandle temporaryColorTexture;
-        RTHandle destinationTexture;
+        // Data class to pass references into the Render Graph lambda
+        private class PassData
+        {
+            public Material material;
+            public TextureHandle source;
+            public TextureHandle tempTarget;
+        }
 
-        string profilerTag;
-
-        // Default constructor for the Blit Render Pass
         public BlitRenderPass(RenderPassEvent renderPassEvent, Material blitMat, string tag)
         {
             this.renderPassEvent = renderPassEvent;
             blitMaterial = blitMat;
-            profilerTag = tag;
+            m_ProfilerTag = tag;
 
-            // Use RTHandles to initialize render textures
-            temporaryColorTexture = RTHandles.Alloc("_TemporaryColorTexture");
-            destinationTexture = RTHandles.Alloc("_AfterPostProcessTexture");
-        }
-
-        // Override the Execute function declared in the scriptable render pass class.
-        public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
-        {
-            // Create a command buffer, a list of graphical instructions to execute
-            CommandBuffer cmd = CommandBufferPool.Get(profilerTag);
-
-            RenderTextureDescriptor opaqueDesc = renderingData.cameraData.cameraTargetDescriptor;
-            opaqueDesc.depthBufferBits = 0;
-
-            // Configure temporary RTs with RTHandle
-            RenderingUtils.ReAllocateIfNeeded(ref destinationTexture, opaqueDesc);
-            RenderingUtils.ReAllocateIfNeeded(ref temporaryColorTexture, opaqueDesc);
-
-            // Copy what the camera is rendering to the render texture and apply the blit material
-            Blit(cmd, source, temporaryColorTexture, blitMaterial);
-
-            // Copy what the temporary render texture is rendering back to the camera
-            Blit(cmd, temporaryColorTexture, source);
-
-            // Execute the graphic commands
-            context.ExecuteCommandBuffer(cmd);
-
-            // Release the command buffer
-            CommandBufferPool.Release(cmd);
+            // Pre-allocate the handle name. The actual texture size is managed by ReAllocateIfNeeded.
+            m_TemporaryColorTexture = RTHandles.Alloc("_TemporaryColorTexture", name: "_TemporaryColorTexture");
         }
 
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
         {
-            base.RecordRenderGraph(renderGraph, frameData);
-        }
+            if (blitMaterial == null) return;
 
-        public override void FrameCleanup(CommandBuffer cmd)
-        {
-            // RTHandles do not need explicit release like temporary RTs, but cleanup logic can go here if needed
-        }
+            // 1. Get URP-specific frame data (Camera textures, etc.)
+            UniversalResourceData resourceData = frameData.Get<UniversalResourceData>();
+            UniversalCameraData cameraData = frameData.Get<UniversalCameraData>();
 
-        public override void OnCameraCleanup(CommandBuffer cmd)
-        {
-            if (temporaryColorTexture != null)
+            // 2. Ensure our temporary texture matches the current camera descriptor
+            RenderTextureDescriptor desc = cameraData.cameraTargetDescriptor;
+            desc.depthBufferBits = 0; // We only need color for a blit
+            RenderingUtils.ReAllocateIfNeeded(ref m_TemporaryColorTexture, desc);
+
+            // 3. Create the Render Graph Pass
+            using (var builder = renderGraph.AddRasterRenderPass<PassData>(m_ProfilerTag, out var passData))
             {
-                RTHandles.Release(temporaryColorTexture);
-                RTHandles.Release(destinationTexture);
+                // Convert RTHandles to Render Graph TextureHandles
+                TextureHandle cameraColor = resourceData.activeColorTexture;
+                TextureHandle tempTexture = renderGraph.ImportTexture(m_TemporaryColorTexture);
+
+                passData.material = blitMaterial;
+                passData.source = cameraColor;
+                passData.tempTarget = tempTexture;
+
+                // Define Inputs and Outputs
+                builder.UseTexture(passData.source);
+                builder.SetRenderAttachment(passData.tempTarget, 0);
+
+                // 4. The Execution Logic
+                builder.SetRenderFunc((PassData data, RasterGraphContext context) =>
+                {
+                    // Pass 1: Camera -> Temp (with Material)
+                    Blitter.BlitTexture(context.cmd, data.source, new Vector4(1, 1, 0, 0), data.material, 0);
+                    
+                    // Note: If you need to blit BACK to the camera, you typically 
+                    // need a second pass or a sub-pass. However, most PhotoMode 
+                    // effects can be done in one pass by setting the Camera as the Attachment.
+                });
             }
+
+            // 5. Final Pass: Blit Temp back to Camera
+            using (var builder = renderGraph.AddRasterRenderPass<PassData>(m_ProfilerTag + "_Final", out var passData))
+            {
+                passData.source = renderGraph.ImportTexture(m_TemporaryColorTexture);
+                passData.tempTarget = resourceData.activeColorTexture;
+
+                builder.UseTexture(passData.source);
+                builder.SetRenderAttachment(passData.tempTarget, 0);
+
+                builder.SetRenderFunc((PassData data, RasterGraphContext context) =>
+                {
+                    // Pass 2: Temp -> Camera (standard copy)
+                    Blitter.BlitTexture(context.cmd, data.source, new Vector4(1, 1, 0, 0), 0, false);
+                });
+            }
+        }
+
+        // Keep this empty for Unity 6; it's only used if Compatibility Mode is enabled.
+        public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData) { }
+
+        // Proper Dispose pattern for RTHandles
+        public void Dispose()
+        {
+            m_TemporaryColorTexture?.Release();
         }
     }
 }

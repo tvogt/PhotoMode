@@ -9,35 +9,29 @@ namespace PhotoMode
         public Material blitMaterial = null;
         private BlitRenderPass blitRenderPass;
 
-        // We will use RTHandle for the source render target
-        private RTHandle sourceHandle;
-
         public override void Create()
         {
-            blitRenderPass = new BlitRenderPass(RenderPassEvent.AfterRendering, blitMaterial, name);
-
-            // Create the source handle (typically "_AfterPostProcessTexture" is a special render target)
-            sourceHandle = RTHandles.Alloc("_AfterPostProcessTexture", name: "_AfterPostProcessTexture");
-            blitRenderPass.source = sourceHandle;
+            // We pass the settings to the constructor. 
+            // The pass now handles its own internal temporary textures.
+            blitRenderPass = new BlitRenderPass(RenderPassEvent.AfterRenderingPostProcessing, blitMaterial, name);
         }
 
         public override void AddRenderPasses(ScriptableRenderer renderer, ref RenderingData renderingData)
         {
-            // Check to make sure the blit has a material and exit gracefully if it doesn't
-            if (blitMaterial == null)
-            {
-                Debug.LogError("Blit is missing its Material. Make sure you have assigned a material in the renderer.");
+            if (blitMaterial == null) {
                 return;
             }
 
-            // Add the blit render pass to the queue of render passes to execute
+            // In Unity 6, we just enqueue. 
+            // The RecordRenderGraph method inside the pass will find the textures it needs.
             renderer.EnqueuePass(blitRenderPass);
         }
 
         protected override void Dispose(bool disposing)
         {
-            // Release the RTHandle when no longer needed
-            RTHandles.Release(sourceHandle);
+            // Call the Dispose method we added to the BlitRenderPass 
+            // to clean up its internal _TemporaryColorTexture.
+            blitRenderPass?.Dispose();
         }
     }
 }
