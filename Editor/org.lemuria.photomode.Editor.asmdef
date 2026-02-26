@@ -1,22 +1,18 @@
 {
-  "name": "org.lemuria.photomode.Editor",
-  "rootNamespace": "",
-  "references": [
-    "org.lemuria.photomode",
-    "Unity.RenderPipelines.Universal.Runtime",
-    "Unity.Cinemachine",
-    "Unity.InputSystem",
-    "Unity.TextMeshPro"
-  ],
-  "includePlatforms": [
-    "Editor"
-  ],
-  "excludePlatforms": [],
-  "allowUnsafeCode": false,
-  "overrideReferences": false,
-  "precompiledReferences": [],
-  "autoReferenced": true,
-  "defineConstraints": [],
-  "versionDefines": [],
-  "noEngineReferences": false
+    "name": "org.lemuria.Photomode.Editor",
+    "rootNamespace": "",
+    "references": [
+        "Tom15825e38782345648994897f61c99bc1.Photomode"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }
